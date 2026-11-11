@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session
 
@@ -40,3 +40,13 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
 def read_users(db: Session = Depends(get_db)):
     users = db.query(User).all()
     return users
+
+@app.delete("/users/{user_id}")
+def delete_user(user_id: int, db: Session = Depends(get_db)):
+    db_user = db.query(User).filter(User.id == user_id).first()
+    if not db_user:
+        raise HTTPException(status_code=44, detail="User not found")
+    
+    db.delete(db_user)
+    db.commit()
+    return {"message": "User deleted successfully"}
